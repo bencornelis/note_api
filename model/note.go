@@ -1,6 +1,9 @@
 package model
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -8,20 +11,29 @@ type Note struct {
 	gorm.Model
 	Text   string `json:"text"`
 	Active bool   `json:"active"`
+
+	UserID uint
 }
 
-func (s *DatabaseStore) GetNotes() ([]Note, error) {
+func (s *DatabaseStore) GetNotes(userId uint) ([]Note, error) {
 	var notes []Note
-	if err := s.db.Find(&notes).Error; err != nil {
+	user := User{}
+	user.ID = userId
+	if err := s.db.Model(&user).Related(&notes).Error; err != nil {
 		return nil, err
 	}
+	fmt.Println(notes)
 	return notes, nil
 }
 
-func (s *DatabaseStore) GetNote(id uint) (Note, error) {
+func (s *DatabaseStore) GetNote(id uint, userId uint) (Note, error) {
 	var note Note
 	if err := s.db.Find(&note, id).Error; err != nil {
 		return Note{}, err
+	}
+
+	if note.UserID != userId {
+		return Note{}, errors.New("note does not belong to user")
 	}
 	return note, nil
 }
@@ -42,8 +54,11 @@ func (s *DatabaseStore) UpdateNote(id uint, note Note) (Note, error) {
 	return note, nil
 }
 
-func (s *DatabaseStore) DeleteNote(id uint) error {
-	note := Note{}
-	note.ID = id
+func (s *DatabaseStore) DeleteNote(id uint, userId uint) error {
+	note, err := s.GetNote(id, userId)
+	if err != nil {
+		return err
+	}
+
 	return s.db.Delete(&note).Error
 }

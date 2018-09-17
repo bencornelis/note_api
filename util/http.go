@@ -1,9 +1,10 @@
-package utils
+package util
 
 import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
 
@@ -14,4 +15,8 @@ func ParseId(r *http.Request) (uint, error) {
 		return 0, err
 	}
 	return uint(id), nil
+}
+
+func ParseUserId(r *http.Request) uint {
+	return context.Get(r, "UserId").(uint)
 }

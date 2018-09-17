@@ -16,6 +16,7 @@ func NewDatabaseStore() (*DatabaseStore, error) {
 	}
 
 	db.AutoMigrate(&Note{})
+	db.AutoMigrate(&User{})
 	s := &DatabaseStore{db}
 	return s, nil
 }
